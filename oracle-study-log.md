@@ -4,18 +4,21 @@
 
 ## 주요 학습 내용
 
-- 학사 시스템 구조에 따라 테이블 생성 (STUDENT, PROFESSOR, COURSE, LECTURE 등)
+- 학사 시스템 구조에 따라 테이블 생성 (`STUDENT`, `PROFESSOR`, `COURSE`, `LECTURE`, `ENROLLMENT`, `GRADE` 등)
 - 제약조건 설정: `PRIMARY KEY`, `FOREIGN KEY`, `UNIQUE`, `CHECK`
-- 시퀀스를 활용한 자동 학번 생성 (`STUDENT_SEQ`)
-- 사용자 계정 생성 및 권한 분리
-  - 교수: 성적 입력/조회
-  - 학생: 본인 성적 조회 및 수강 신청
+- 시퀀스를 활용한 학번 자동 생성 (`STUDENT_SEQ`)
+- 사용자 계정 생성 및 역할 기반 권한 분리
+  - 교수 계정: 성적 입력/조회
+  - 학생 계정: 본인 성적 조회 및 수강 신청
 - 뷰(View) 생성
   - `V_STUDENT_GRADES`: 학생 본인 성적만 조회
   - `V_PROFESSOR_ALL_GRADES`: 교수는 전체 학생 성적 조회
-- DML 문 실습: `UPDATE`, `DELETE` 시 외래 키 제약 조건 처리 경험
+- 권한 부여 실습
+  - `GRANT SELECT, INSERT, UPDATE ON GRADE TO prof_user;` 등 명령어 기반 권한 관리
+- `SQL*Plus` 환경에서 사용자 계정 생성 및 권한 부여 실습
+- `CREATE SEQUENCE`, `CREATE VIEW` 명령을 활용한 객체 생성 실습
+- DML 문(`INSERT`, `UPDATE`, `DELETE`) 사용 시 외래 키 제약 조건 처리 경험
 - 다양한 `SELECT` 쿼리를 활용한 조건별 조회, 집계, 필터링 실습
-- `SQL*Plus` 환경에서 계정 생성 및 권한 부여 명령어 실습
   
 ---
 
@@ -93,4 +96,49 @@ FROM lecture l
 JOIN enrollment e ON l.lecture_id = e.lecture_id
 GROUP BY l.lecture_id, l.max_capacity
 HAVING COUNT(e.enroll_id) >= l.max_capacity;
+```
+
+
+### 8.권한 부여
+```sql
+GRANT SELECT, INSERT, UPDATE ON GRADE TO prof_user;
+GRANT SELECT, INSERT, DELETE ON ENROLLMENT TO student_user;
+```
+
+
+
+### 9.시퀀스 생성
+```sql
+CREATE SEQUENCE STUDENT_SEQ
+START WITH 1         
+INCREMENT BY 1       
+NOCACHE              
+NOCYCLE              
+MAXVALUE 1000           
+MINVALUE 1;          
+```
+
+
+
+### 10. view 생성
+```sql
+-- 학생용 성적 조회 뷰
+CREATE VIEW V_STUDENT_GRADES AS
+SELECT s.student_id, s.student_name, c.course_name, g.score, g.grade_letter
+FROM grade g
+JOIN enrollment e ON g.enroll_id = e.enroll_id
+JOIN student s ON e.student_id = s.student_id
+JOIN lecture l ON e.lecture_id = l.lecture_id
+JOIN course c ON l.course_id = c.course_id
+WHERE s.student_id = USER;
+
+-- 교수용 전체 성적 조회 뷰
+CREATE VIEW V_PROFESSOR_ALL_GRADES AS
+SELECT p.prof_name, s.student_name, c.course_name, g.score, g.grade_letter
+FROM grade g
+JOIN enrollment e ON g.enroll_id = e.enroll_id
+JOIN student s ON e.student_id = s.student_id
+JOIN lecture l ON e.lecture_id = l.lecture_id
+JOIN course c ON l.course_id = c.course_id
+JOIN professor p ON l.prof_id = p.prof_id;
 ```
