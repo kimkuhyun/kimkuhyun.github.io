@@ -6,3 +6,4 @@
 
 ## 주차별 학습 기록
 - [Week 1 - Oracle 실습: 관계형 DB 구현과 SQL 흐름 정리](./oracle-study-log.md)
+- [Week 2 - Oracle 실습: Advanced 과정 실습 정리](./oracle-study-lot_02.md)
